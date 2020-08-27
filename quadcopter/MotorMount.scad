@@ -1,8 +1,8 @@
-motor_d = 8;
+motor_d = 7;
 motor_l = 20;
 
 ring_wall_t = 2;
-ring_h      = 4.5;
+ring_h      = 10;
 ring2_h     = 6;
 base_beam_h = 1.4;
 
@@ -27,7 +27,7 @@ module base_ring() {
         {
             motor();
             rotate([0,0,180]) 
-                translate([-slot/2,0,-0.01]) cube([slot,d,ring_h + 0.01]);
+                translate([-slot/2,0,-0.01]) cube([slot,d,ring_h + 1]);
         }
     }
 }
@@ -65,33 +65,36 @@ module base_beam() {
     }
 }
 
-module stick_holder(y_shift) {
+module stick_holder(y_shift, riser=0.5) {
     holder_l = 8;
-    slot_l = 3;
+    slot_l = 4;
     slot_width = 0.5;
     d = stick_d+stick_holder_t;
-    riser = 0.5;
-    
+        
     translate([0,(motor_d+ring_wall_t)/2-y_shift,d/2+riser])
     rotate([-90,0,0])
     difference() {
         union() {
-            cylinder(d=d, h=holder_l);
-            translate([0,(stick_d+stick_holder_t/2+riser)/2,holder_l/2])
-                cube([slot_width*4, riser+stick_holder_t/2, holder_l], center=true);
+            cylinder(d=d, h=holder_l*0.75);
+            translate([0,0,holder_l*0.75]) cylinder(d1=d, d2=d-0.5, h=holder_l*0.25);
+            if (riser) {
+                translate([0,(stick_d+stick_holder_t/2+riser)/2,holder_l/2])
+                    cube([slot_width*4, riser+stick_holder_t/2, holder_l], center=true);
+            }
         }
         union() {
             cylinder(d=stick_d, h=holder_l+0.01);
             translate([0,0,holder_l-slot_l/2])
                 cube([slot_width, d+riser+1, slot_l+1], center=true);
+            
         }
     }
 }
 
 module c_clip1() {
     h = 2;
-    t = 2;
-    d = motor_d + ring_wall_t;
+    t = 3;
+    d = motor_d + ring_wall_t - 0.2;
     slot_x = stick_d + stick_holder_t + 2;
     difference() {
         cylinder(d=d + t, h=h);
@@ -102,15 +105,28 @@ module c_clip1() {
     }
 }
 
-module holder() {
-    translate([0,0,-base_beam_h]) {
-        base_ring();
-        top_ring();
-        base_beam();
-        stick_holder(0.8);
+module stick_holder_o_ring() {
+    h = 1.2;
+    t = 2;
+    d = stick_d + stick_holder_t;
+    difference() {
+        cylinder(d=d+t, h=h);
+        translate([0,0, -0.1]) {
+            cylinder(d=d, h=h+1);
+        }
     }
+}
+
+module holder() {
+    
+    base_ring();
+    //top_ring();
+    base_beam();
+    stick_holder(0.8, 0);
+    
  }
 
-% motor();
+% translate([0,0,base_beam_h]) motor();
 holder();
 translate([0, - motor_d*1.2, 0]) c_clip1();
+ translate([- motor_d*1.2, 0, 0]) stick_holder_o_ring();
