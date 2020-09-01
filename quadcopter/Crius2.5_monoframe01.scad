@@ -45,22 +45,28 @@ module board_mount(h=3) {
     
     lattice_l = board_l-edge_t;
     
-    module edge() {
-        translate([0,0,h/2])
-            difference() {
-                cube([board_l, board_l, h], center=true);
-                cube([lattice_l, lattice_l, 2*h], center=true);
+    module plate(side, h, r=3) {
+        hull() {
+            for(x=[-1,1], y=[-1, 1]) {
+                translate([x*(side/2-r), y*(side/2-r)])
+                    cylinder(r=r, h=h, $fn=100);
             }
+        }
+    }
+    module edge() {
+        difference() {
+            plate(board_l, h=h);
+            translate([0,0,-1]) plate(lattice_l, h=h+2);
+        }
     }
          
     module lattice() {
-        translate([0,0,lattice_t/2])
-            difference() {
-                cube([board_l, board_l, lattice_t], center=true);
-                translate([0,-1.9])
-                    hexagon_lattice(7, 12, zh=2*h, side=3.5, 
-                                    gap=1.5, center=true);
-            }
+        difference() {
+            plate(board_l, lattice_t);
+            translate([0,-1.9])
+                hexagon_lattice(7, 12, zh=lattice_t+2, side=3.5, 
+                                gap=1.5, center=true);
+        }
     }
     
     module standoffs() {
@@ -96,7 +102,7 @@ module board_mount(h=3) {
             edge();
             lattice();
             standoffs();
-            for (x=[1, -1]) {
+            for (x=[1, -1]) { // Battery mount
                 translate([x*batt_gap/2, 0]) {
                     battery_strap_hole(batt_l+1, batt_w+2.5, lattice_t);
                     for (y=[1,-1]) {
@@ -119,16 +125,25 @@ module arms(h=3) {
     $fn=50;
     r=mm_radius-16; 
     w=2.8;
-    clip_d=w*2;
+    clip_d=w;
     rib_d = motor_d + 2*motor_mount_t + 2.5;
     mm_rad_x = cos(45)*mm_radius;
     mm_rad_y = sin(45)*mm_radius;
     
     module wire_clip(h=1.5) {
-        translate([clip_d/4,0]) rotate([0,90,-90]) difference() {
-            tube(od=clip_d, id=clip_d-1.5, h=h);
-            translate([0,-clip_d/2,-0.5])cube([clip_d, clip_d, h+2]);
-            translate([-clip_d/2,0,-0.5])cube([clip_d, clip_d, h+2]);
+        clip_w=1;
+        rise = 0.5;
+        slot=0.8;
+        rotate([0,90,-90]) difference() {
+            translate([-rise,0,0]) {
+                tube(od=clip_d, id=clip_d-clip_w, h=h);
+                translate([0, -clip_d/2]) cube([rise,clip_d, h]);
+            }
+            translate([-rise,-(clip_d-clip_w)/2,-1])
+                cube([clip_d, clip_d-clip_w, h+2]);
+            translate([-(rise+clip_d/2+1),-slot/2,-1])
+                cube([rise+clip_d, slot, h+2]);
+            
         }
     }
     module arm1(clip=false) {
@@ -138,11 +153,9 @@ module arms(h=3) {
                 tube(od=2*r, id=2*(r-w), h=h, $fn=150);
                 if (clip) {
                     aa=10; ao=2;
-                    for(a=[[aa, 0], [aa+ao, 180],
-                           [-aa, 180], [-aa-ao, 0]]) {
-                        rotate([0,0,a[0]]) 
-                            translate([r-w+clip_d/4,0,h])
-                                rotate([0,0,a[1]]) wire_clip();
+                    for(a=[aa, -aa]) {
+                        rotate([0,0,a]) 
+                            translate([r-w/2,0,h]) wire_clip();
                     }
                 }
             }
@@ -170,7 +183,7 @@ module arms(h=3) {
         }
         for (a=[45:90:360]) {
             translate([cos(a)*mm_radius, sin(a)*mm_radius, -1])
-                cylinder(d=motor_d, h=h+2);
+                cylinder(d=motor_d, h=h+2); // Clear motor holes
         }
     }
 }
@@ -188,5 +201,6 @@ module criusFrame() {
 }   
 
 criusFrame();
+//motorMount(d=motor_d, thickness=motor_mount_t, zrot=a);
 
 //o=20;translate([-o,o]) rotate([0,0,45]) color("blue") cube([2, 30, 5]);
