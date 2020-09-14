@@ -91,5 +91,5 @@ module holder() {
 
 % translate([0,0,base_beam_h]) motor();
 holder();
-translate([0, - motor_d*1.2, 0]) c_clip1();
-translate([- motor_d*1.2, 0, 0]) stickHolder2_Oring(stick_d, stick_holder_t, riser=0.2);
+//translate([0, - motor_d*1.2, 0]) c_clip1();
+translate([- motor_d*1.2, 0, 0]) stickHolder2_Oring(stick_d, stick_holder_t, o_thickness=1.6, riser=0.2);

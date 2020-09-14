@@ -2,7 +2,7 @@ use <../libs/hexagon_lattice.scad>
 
 //translate([0,-60]) import(file="micro105-bottom-v4-bottom-battery.stl");
 
-mm_radius = 60;  //motor mount radius
+mm_radius = 63;  //motor mount radius
 motor_d   = 7;
 motor_mount_t = 1.5; //motor mount thickness
 board_ll = 40;  // Actual board length
@@ -40,7 +40,7 @@ module board_mount(h=3) {
     edge_t = 3;
     lattice_t = 1.5;   //Thickness of the hexagonal lattice
     hole_offset = 2.5; //distance of hole from edge;
-    hole_d = 2.5;
+    hole_d = 2.55;
     batt_gap = 20;
     batt_l   = 8;
     batt_w   = 1.5;
@@ -125,23 +125,27 @@ module board_mount(h=3) {
 
 module arms(h=3) {
     $fn=50;
-    r=mm_radius-16; 
-    w=2.8;
+    r = mm_radius/sqrt(2) + board_l*board_l / (sqrt(2)*mm_radius) - board_l/2 + 2.5; 
+    alpha = 45 - asin((motor_d/2)/mm_radius);
+    xs = mm_radius * cos(alpha) - board_l/2;
+    //r = (xs + pow(mm_radius * sin(alpha), 2)/xs) + board_l/2;
+    w=2.7;
     clip_d=w;
     rib_d = motor_d + 2*motor_mount_t + 2.5;
     module wire_clip(h=1.5) {
-        clip_w=1;
+        clip_w=1.4;
+        clip_l = 3.5;
         rise = 0.5;
         slot=0.8;
         rotate([0,90,-90]) difference() {
             translate([-rise,0,0]) {
-                tube(od=clip_d, id=clip_d-clip_w, h=h);
+                tube(od=clip_d, id=clip_d-clip_w, h=clip_l);
                 translate([0, -clip_d/2]) cube([rise,clip_d, h]);
             }
             translate([-rise,-(clip_d-clip_w)/2,-1])
-                cube([clip_d, clip_d-clip_w, h+2]);
+                cube([clip_d, clip_d-clip_w, clip_l+2]);
             translate([-(rise+clip_d/2+1),-slot/2,-1])
-                cube([rise+clip_d, slot, h+2]);
+                cube([rise+clip_d, slot, clip_l+2]);
             
         }
     }
@@ -169,10 +173,33 @@ module arms(h=3) {
         }
     }
     
+    module arm2(clip=false) {
+        intersection() {
+            translate([-(r + board_l/2-1),0]) {
+                tube(od=2*r, id=2*(r-w), h=h, $fn=150);
+                if (clip) {
+                    aa=10; ao=2;
+                    for(a=[aa, -aa]) {
+                        rotate([0,0,a]) 
+                            translate([r-w/2,0,h]) wire_clip();
+                    }
+                }
+            }
+            cylinder(r=mm_radius-1, h=4*h, $fn=150);
+        }
+        
+        //Rib around motorMount
+        rotate([0,0,45]) translate([-mm_radius, 0]) 
+        difference() {
+            cylinder(d=rib_d, h=h);
+            translate([rib_d/5, -rib_d/2, -1]) cube([rib_d, rib_d, h+2]);
+        }
+    }
+    
     difference() {
         union() {
             for(a=[0:90:270]) {
-                rotate([0,0,a]) arm1(clip=(a%180 == 0));
+                rotate([0,0,a]) arm2(clip=(a%180 == 0));
             }
         }
         for (a=[45:90:360]) {
@@ -310,7 +337,23 @@ module leg3(frame_h=3) {
 
 
 criusFrame();
-translate([-60, 0]) leg3();
+//translate([-60, 0]) leg3();
+//motorTestMount();
+
 
 
 //o=20;translate([-o,o]) rotate([0,0,45]) color("blue") cube([2, 30, 5]);
+module motorTestMount() {
+    $fn=100;
+    xx=30; yy=2; h=2;
+    difference() {
+        for (zz=[0:60:135]) {
+            rotate([0,0,zz+30]) 
+                hull() {
+                    for(x=[-1, 1]) {translate([x*(xx/2-yy/2),0]) cylinder(d=yy, h=h);}
+                }
+        }
+        translate([0,0, -0.5]) cylinder(d=motor_d, h=h+1);
+    }
+    motorMount(d=motor_d, thickness=motor_mount_t);
+}
