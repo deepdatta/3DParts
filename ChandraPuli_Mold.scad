@@ -1,6 +1,6 @@
 module teardrop(r1, r2=0.2, l, zrot=0, off=0) {
     rotate([0,0,zrot]) translate([off, 0])
-    rotate([0,90])
+    scale([1,1,0.75]) rotate([0,90])
     hull() {
         sphere(r=r1);
         translate([0,0,l-(r1+r2)]) sphere(r=r2);
@@ -35,13 +35,19 @@ module chandrapuliMold(h=8){
         rotate([0,90]) translate([0,0,-len_line/2]) cylinder(r=line_r, h=len_line);
         
         translate([0, -off]) {
-             rotate([0,0,12]) rotate_extrude(convexity=10, angle=156) {
+             rotate([0,0,11]) rotate_extrude(convexity=10, angle=158) {
                 translate([big_r, 0, 0])  circle(r=line_r);
             }
              rotate([0,0,15]) rotate_extrude(convexity=10, angle=150) {
                 translate([23, 0, 0])  circle(r=line_r);
             }
+            
+            for (a=[20:10:160]) {
+                rotate([0,0,a]) translate([25.5,0]) sphere(r=1.2);
+            }
         }
+        
+        
         translate([0, 1]) centerPiece();
     }
     
@@ -55,11 +61,18 @@ module chandrapuliMold(h=8){
         }
     }
     difference() {
-        translate([0,0,-h]) union() {
+        union() {
             base(h);
-            base(3, 3);
+            base(3, 2.5);
         }
-        chandraPuliShape();
+        translate([0,0,h]) chandraPuliShape();
+    }
+    
+    translate([0, 40]) {
+        difference() {
+            base(6, 2);
+            translate([0,0,-0.1]) base(6.5);
+        }
     }
     
 }
