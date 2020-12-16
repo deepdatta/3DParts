@@ -5,9 +5,13 @@ weMosBase_w  =26.2;
 // WeMos Base PCB Thickness
 weMosBase_thk=1.75;
 
+holeu=2.54;
+
 module wemosBase(l=weMosBase_l, w=weMosBase_w, thk=weMosBase_thk) {
     module pinHoles(d, zoff, h, color="silver") {
-        color(color) for(yy=[1.75:2.54:20], xx=[1.25, w-1.25]) {
+        xoff=1.45;
+        yoff=1.75;
+        color(color) for(yy=[yoff:holeu:20], xx=[xoff, xoff+9*holeu]) {
             translate([xx, l-yy, zoff]) cylinder(d=d, h=h);
         }
     }
