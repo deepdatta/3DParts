@@ -7,7 +7,7 @@ weMosBase_thk=1.75;
 
 module wemosBase(l=weMosBase_l, w=weMosBase_w, thk=weMosBase_thk) {
     module pinHoles(d, zoff, h, color="silver") {
-        color(color) for(yy=[1.75:2.5:20], xx=[1.25, w-1.25]) {
+        color(color) for(yy=[1.75:2.54:20], xx=[1.25, w-1.25]) {
             translate([xx, l-yy, zoff]) cylinder(d=d, h=h);
         }
     }
